@@ -10,7 +10,7 @@
 # Many of these configuration options can be set straight in your model.
 Devise.setup do |config|
   # 共通の設定: Google OAuth2の設定
-  config.omniauth :google_oauth2, ENV['GOOGLE_CLIENT_ID'], ENV['GOOGLE_CLIENT_SECRET'], {
+  config.omniauth :google_oauth2, ENV.fetch('GOOGLE_CLIENT_ID', nil), ENV.fetch('GOOGLE_CLIENT_SECRET', nil), {
     scope: 'userinfo.email,userinfo.profile',
     prompt: 'select_account',
     image_aspect_ratio: 'square',  # ユーザーのプロフィール画像のアスペクト比
@@ -32,12 +32,12 @@ Devise.setup do |config|
     # 例えば、セキュリティを強化する設定や、ログ出力レベルを調整する設定など
 
     # より安全な通信を強制するために、SSLを使用してOmniAuthのコールバックを処理
-    config.omniauth :google_oauth2, ENV['GOOGLE_CLIENT_ID'], ENV['GOOGLE_CLIENT_SECRET'], {
+    config.omniauth :google_oauth2, ENV.fetch('GOOGLE_CLIENT_ID', nil), ENV.fetch('GOOGLE_CLIENT_SECRET', nil), {
       scope: 'userinfo.email,userinfo.profile',
       prompt: 'select_account',
       image_aspect_ratio: 'square',
       image_size: 50,
-      secure_image_url: true  # HTTPSを使用して画像URLを取得
+      secure_image_url: true # HTTPSを使用して画像URLを取得
     }
   end
 
