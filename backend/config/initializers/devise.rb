@@ -9,10 +9,37 @@
 # Use this hook to configure devise mailer, warden hooks and so forth.
 # Many of these configuration options can be set straight in your model.
 Devise.setup do |config|
-  config.omniauth :google_oauth2, ENV.fetch('GOOGLE_CLIENT_ID', nil), ENV.fetch('GOOGLE_CLIENT_SECRET', nil), {
+  # 共通の設定: Google OAuth2の設定
+  config.omniauth :google_oauth2, ENV['GOOGLE_CLIENT_ID'], ENV['GOOGLE_CLIENT_SECRET'], {
     scope: 'userinfo.email,userinfo.profile',
-    prompt: 'select_account'
+    prompt: 'select_account',
+    image_aspect_ratio: 'square',  # ユーザーのプロフィール画像のアスペクト比
+    image_size: 50                 # プロフィール画像のサイズ
   }
+
+  # 開発環境のみの設定
+  if Rails.env.development?
+    # OmniAuthのログをRailsのログに出力する
+    OmniAuth.config.logger = Rails.logger
+
+    # 開発環境固有の設定があればここに追加
+    # 例: デバッグ用の設定、テストユーザーでのログインを容易にする設定など
+  end
+
+  # 本番環境のみの設定
+  if Rails.env.production?
+    # 本番環境固有の設定をここに記述
+    # 例えば、セキュリティを強化する設定や、ログ出力レベルを調整する設定など
+
+    # より安全な通信を強制するために、SSLを使用してOmniAuthのコールバックを処理
+    config.omniauth :google_oauth2, ENV['GOOGLE_CLIENT_ID'], ENV['GOOGLE_CLIENT_SECRET'], {
+      scope: 'userinfo.email,userinfo.profile',
+      prompt: 'select_account',
+      image_aspect_ratio: 'square',
+      image_size: 50,
+      secure_image_url: true  # HTTPSを使用して画像URLを取得
+    }
+  end
 
   # The secret key used by Devise. Devise uses this key to generate
   # random tokens. Changing this key will render invalid all existing
