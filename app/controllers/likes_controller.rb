@@ -5,13 +5,13 @@ class LikesController < ApplicationController
 
     if @like.save
       respond_to do |format|
-        format.html { redirect_to @post, notice: 'You liked this post.' }
         format.turbo_stream
+        format.html { redirect_to @post }
       end
     else
       respond_to do |format|
-        format.html { redirect_to @post, alert: 'Unable to like this post.' }
         format.turbo_stream
+        format.html { redirect_to @post }
       end
     end
   end
@@ -22,8 +22,8 @@ class LikesController < ApplicationController
     @like.destroy
 
     respond_to do |format|
-      format.html { redirect_to @post, notice: 'You unliked this post.' }
       format.turbo_stream
+      format.html { redirect_to @post }
     end
   end
 end

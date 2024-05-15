@@ -10,13 +10,17 @@ module.exports = {
       colors: {
         custom_sky: "rgb(56 189 248)",
       },
-      backgroundImage: {
-        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-conic":
-          "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
-      },
       fontSize: {
         sm: "15px", // 15pxの文字サイズを設定
+      },
+      keyframes: {
+        ripple: {
+          "0%": { transform: "scale(0.1)", opacity: 1 },
+          "100%": { transform: "scale(1)", opacity: 0 },
+        },
+      },
+      animation: {
+        ripple: "ripple 0.6s linear",
       },
     },
   },
