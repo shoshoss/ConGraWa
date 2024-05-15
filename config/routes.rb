@@ -32,7 +32,7 @@ Rails.application.routes.draw do
 
   # 投稿のルーティング
   resources :posts, only: %i[index new create edit update destroy] do
-    resources :likes, only: %i[create destroy]
+    resources :likes, only: %i[create destroy], shallow: true
   end
 
   # プロフィールのルーティング

@@ -3,13 +3,15 @@ class ProfilesController < ApplicationController
   before_action :set_user, only: %i[show edit update]
 
   def show
-    params[:category] ||= 'self' # デフォルトで自分の投稿を表示する
+    params[:category] ||= "self"  # デフォルトで自分の投稿を表示する
     @pagy, @posts = pagy_countless(filtered_posts, items: 10)
     respond_to do |format|
       format.html
       format.turbo_stream do
-        render turbo_stream: turbo_stream.replace('posts', partial: 'posts/posts_list',
-                                                           locals: { posts: @posts, pagy: @pagy })
+        render turbo_stream: [
+          turbo_stream.append("posts", partial: "posts/post", collection: @posts, as: :post),
+          turbo_stream.replace("next-page", partial: "posts/next_page", locals: { pagy: @pagy })
+        ]
       end
     end
   end

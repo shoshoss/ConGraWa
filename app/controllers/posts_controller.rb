@@ -5,9 +5,13 @@ class PostsController < ApplicationController
     @pagy, @posts = pagy_countless(Post.includes(:user).order(created_at: :desc), items: 10)
     respond_to do |format|
       format.html
-      format.turbo_stream
+      format.turbo_stream do
+        render turbo_stream: [
+          turbo_stream.append("posts", partial: "posts/post", collection: @posts, as: :post),
+          turbo_stream.replace("next-page", partial: "posts/next_page", locals: { pagy: @pagy })
+        ]
+      end
     end
-    # @posts = Post.includes(:user).order(created_at: :desc).page(params[:page]).per(10)
   end
 
   def show; end
