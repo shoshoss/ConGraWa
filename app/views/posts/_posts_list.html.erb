@@ -1,0 +1,8 @@
+<% if posts.present? %>
+  <%= render posts %>
+  <% if pagy.next %>
+    <%= render 'posts/next_page' %>
+  <% end %>
+<% else %>
+  <div class="mb-3">投稿がありません</div>
+<% end %>

@@ -71,15 +71,8 @@
 
     <!-- 投稿一覧 -->
     <div id="posts" data-profile-target="posts">
-      <% if @posts.present? %>
-        <%= turbo_frame_tag "next-page" do %>
-          <%= render @posts %>
-          <% if @pagy.next %>
-            <%= render 'posts/next_page' %>
-          <% end %>
-        <% end %>
-      <% else %>
-        <div class="mb-3">投稿がありません</div>
+      <%= turbo_frame_tag "posts" do %>
+        <%= render partial: 'posts/posts_list', locals: { posts: @posts, pagy: @pagy } %>
       <% end %>
     </div>
 
