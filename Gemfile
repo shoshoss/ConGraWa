@@ -79,6 +79,9 @@ gem 'rack-rewrite', '~> 1.5'
 # OGPメタタグの設定を効率的に行うため
 gem 'meta-tags', '~> 2.21'
 
+# import メソッドを使用することで、一度に複数のレコードを効率的に挿入
+gem 'activerecord-import', '~> 1.7'
+
 group :development, :test do
   # リクエストの速度を表示するためのrack-mini-profiler
   gem 'rack-mini-profiler', '>= 3.3', require: false

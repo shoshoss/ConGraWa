@@ -108,11 +108,11 @@ class PostsController < ApplicationController
     return if recipient_ids.blank?
 
     recipients = recipient_ids.map do |recipient_id|
-      { post_id: post.id, user_id: recipient_id, role: 'direct_recipient', created_at: Time.current,
-        updated_at: Time.current }
+      PostUser.new(post_id: post.id, user_id: recipient_id, role: 'direct_recipient', created_at: Time.current, updated_at: Time.current)
     end
 
-    PostUser.insert_all(recipients) # rubocop:disable Rails/SkipsModelValidations
+    # Notification.importメソッドを使用して一括インポート
+    PostUser.import(recipients, validate: true)
   end
 
   # 非同期通知を実行する
