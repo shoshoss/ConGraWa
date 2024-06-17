@@ -41,7 +41,6 @@ class PostsController < ApplicationController
     if @post.save
       create_post_users(@post) if post_params[:recipient_ids].present?
       notify_async(@post, 'direct') if @post.privacy == 'selected_users'
-      expire_cache_for(@post) # キャッシュの削除
       flash[:notice] = t('defaults.flash_message.created', item: Post.model_name.human, default: '投稿が作成されました。')
       redirect_to user_post_path(current_user.username_slug, @post)
     else
@@ -54,7 +53,6 @@ class PostsController < ApplicationController
   def update
     if @post.update(post_params.except(:recipient_ids))
       create_post_users(@post) if post_params[:recipient_ids].present?
-      expire_cache_for(@post) # キャッシュの削除
       flash[:notice] = t('defaults.flash_message.updated', item: Post.model_name.human, default: '投稿が更新されました。')
       redirect_to user_post_path(current_user.username_slug, @post)
     else
@@ -66,7 +64,6 @@ class PostsController < ApplicationController
   # 投稿を削除するアクション
   def destroy
     @post.destroy!
-    expire_cache_for(@post) # キャッシュの削除
     flash.now[:notice] = t('defaults.flash_message.deleted', item: Post.model_name.human, default: '投稿が削除されました。')
     respond_to do |format|
       format.html { redirect_to posts_path, status: :see_other }
@@ -108,7 +105,7 @@ class PostsController < ApplicationController
     return if recipient_ids.blank?
 
     recipients = recipient_ids.map do |recipient_id|
-      PostUser.new(post_id: post.id, user_id: recipient_id, role: 'direct_recipient', created_at: Time.current, updated_at: Time.current)
+      PostUser.new(post_id: post.id, user_id: recipient_id, role: 'direct_recipient')
     end
 
     # Notification.importメソッドを使用して一括インポート
@@ -144,11 +141,5 @@ class PostsController < ApplicationController
     return if @post.visible_to?(current_user)
 
     redirect_to root_path, alert: 'この投稿を見る権限がありません。'
-  end
-
-  # キャッシュを削除するメソッド
-  def expire_cache_for(post)
-    Rails.cache.delete('posts/index')
-    Rails.cache.delete("posts/show/#{post.id}")
   end
 end
