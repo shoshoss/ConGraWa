@@ -1,3 +1,4 @@
+<!-- app/views/posts/new.html.erb -->
 <%= turbo_frame_tag "post_modal" do %>
   <dialog id="post_modal_dialog" class="modal bg-gray-500 bg-opacity-50" data-controller="post-modal">
     <div class="modal-box p-2 max-h-screen">
@@ -33,7 +34,8 @@
               <!-- 音声クリップはここに表示 -->
             </section>
 
-            <%= f.file_field :audio, direct_upload: true, class: "hidden" %>
+            <!-- ファイルフィールドは隠す -->
+            <%= f.file_field :audio, direct_upload: true, class: "hidden", id: "audio-file" %>
             <%= f.hidden_field :duration, class: "duration-field" %>
 
             <!-- 送信先設定 -->

@@ -5,6 +5,5 @@ class UploadAudioJob < ApplicationJob
   def perform(post_id, audio)
     post = Post.find(post_id)
     post.audio.attach(audio)
-    post.save!
   end
 end

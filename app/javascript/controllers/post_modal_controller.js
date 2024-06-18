@@ -12,33 +12,11 @@ export default class extends Controller {
   // 初期設定: コントローラが接続されたときに呼ばれる
   connect() {
     this.element.setAttribute("open", true);
-
-    // モーダルが開いたときにバックグラウンドをクリックして閉じるイベントを追加
-    // this.element.addEventListener("click", this.closeBackground.bind(this));
   }
 
+  // モーダルを閉じる
   closeModal() {
-    // モーダルを閉じる
     this.element.close();
-  }
-
-  closeBackground(event) {
-    // バックグラウンドをクリックしたかどうかをチェック
-    if (
-      event.target === this.dialogTarget &&
-      this.dialogTarget.hasAttribute("open")
-    ) {
-      console.log("Dialog closed");
-      // モーダルを閉じる
-      this.closeModal();
-    }
-  }
-
-  afterClose(event) {
-    if (!event.detail.success) {
-      // フォームのバリデーションエラーの場合はここで何もしない
-      return;
-    }
   }
 
   // 録音開始
@@ -135,6 +113,36 @@ export default class extends Controller {
     // Submitボタンを有効化
     const submitButton = fileInput.form.querySelector('input[type="submit"]');
     submitButton.disabled = false;
+
+    // Blobデータをキャッシュに保存
+    this.saveAudioToCache(blob);
+  }
+
+  // Blobデータをキャッシュに保存するメソッド
+  saveAudioToCache(blob) {
+    const dbName = "audioCacheDB";
+    const storeName = "audioStore";
+    const request = indexedDB.open(dbName, 1);
+
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      db.createObjectStore(storeName);
+    };
+
+    request.onsuccess = (event) => {
+      const db = event.target.result;
+      const transaction = db.transaction(storeName, "readwrite");
+      const store = transaction.objectStore(storeName);
+      const id = new Date().getTime();
+      store.put(blob, id);
+      transaction.oncomplete = () => {
+        console.log("Audio saved to cache with ID:", id);
+      };
+    };
+
+    request.onerror = (event) => {
+      console.error("Error opening IndexedDB:", event.target.errorCode);
+    };
   }
 
   // 音声クリップを生成して表示するメソッド

@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus";
+import { getFromCache, openDatabase } from "../utils/indexedDB"; // パスを適切に設定
 
 export default class extends Controller {
   static targets = ["playButton"];
@@ -14,7 +15,7 @@ export default class extends Controller {
     });
   }
 
-  playPause(event) {
+  async playPause(event) {
     const button = event.currentTarget;
     const audioId = button.dataset.audioId;
     const audio = document.getElementById(`audio-${audioId}`);
@@ -38,23 +39,22 @@ export default class extends Controller {
       }
     });
 
-    // 音声が添付されていない場合はここで処理を終了
+    // 音声が添付されていない場合はキャッシュから取得して再生
     if (!audio) {
+      await this.playAudioFromCache(audioId, icon, seekBar);
       return;
     }
 
     // 音声の再生状態を切り替える
     if (audio.paused) {
-      audio
-        .play()
-        .then(() => {
-          this.updateIcon(icon, true);
-        })
-        .catch((error) => {
-          console.error("Playback failed:", error);
-          alert(`音声の再生に失敗しました: ${error.message}`);
-          this.updateIcon(icon, false);
-        });
+      try {
+        await audio.play();
+        this.updateIcon(icon, true);
+      } catch (error) {
+        console.error("Playback failed:", error);
+        alert(`音声の再生に失敗しました: ${error.message}`);
+        this.updateIcon(icon, false);
+      }
     } else {
       audio.pause();
       this.updateIcon(icon, false);
@@ -73,6 +73,37 @@ export default class extends Controller {
       this.updateCurrentTimeDisplay(audioId, 0);
       seekBar.value = 0;
     });
+  }
+
+  // キャッシュから音声を再生するメソッド
+  async playAudioFromCache(audioId, icon, seekBar) {
+    try {
+      const audioBlob = await getFromCache(audioId);
+      if (audioBlob) {
+        const audioURL = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioURL);
+        audio.controls = true;
+
+        // アイコンとシークバーの更新
+        audio.addEventListener("timeupdate", () => {
+          this.updateCurrentTimeDisplay(audioId, audio.currentTime);
+          seekBar.value = audio.currentTime;
+        });
+
+        audio.addEventListener("ended", () => {
+          this.updateCurrentTimeDisplay(audioId, 0);
+          seekBar.value = 0;
+        });
+
+        await audio.play();
+        this.updateIcon(icon, true);
+        console.log("キャッシュから音声を再生中...");
+      } else {
+        console.log("キャッシュに音声データが見つかりませんでした。");
+      }
+    } catch (error) {
+      console.error("キャッシュから音声の再生に失敗しました:", error);
+    }
   }
 
   seek(event) {

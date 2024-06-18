@@ -1,10 +1,13 @@
 <!-- オーディオプレイヤー -->
 <div class="mt-2 mr-5">
-  <% if post.audio.attached? %>
-    <audio id="audio-<%= post.id %>" preload="metadata">
-      <source src="<%= url_for(post.audio) %>" type="<%= post.audio.content_type %>">
-      お使いのブラウザはオーディオプレイヤーをサポートしていません。
-    </audio>
+  <% if post.duration %>
+    <% if post.audio.attached? %>
+      <audio id="audio-<%= post.id %>" preload="metadata">
+        <source src="<%= url_for(post.audio) %>" type="<%= post.audio.content_type %>">
+        お使いのブラウザはオーディオプレイヤーをサポートしていません。
+      </audio>
+
+    <% end %>
     <input type="range" min="0" max="<%= post.duration %>" value="0" step="1" class="range range-info range-sm md:range-md" data-action="input->audio#seek" data-audio-id="<%= post.id %>">
     <div class="flex justify-between">
       <div id="current-time-<%= post.id %>">00:00</div>

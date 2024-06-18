@@ -39,7 +39,7 @@ class PostsController < ApplicationController
       flash[:notice] = t('defaults.flash_message.created', item: Post.model_name.human, default: '投稿が作成されました。')
       render turbo_stream: [
         turbo_stream.remove('post_modal'),
-        turbo_stream.prepend('post-list', partial: 'posts/post', locals: { post: @post }),
+        turbo_stream.prepend('post-list', partial: 'posts/post_content', locals: { post: @post }),
         turbo_stream.replace('flash', partial: 'shared/flash_message', locals: { flash: })
       ]
     else
