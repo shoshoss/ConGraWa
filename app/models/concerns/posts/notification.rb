@@ -29,28 +29,8 @@ module Posts
       end
 
       # 返信の通知を作成するメソッド
-      def create_notification_reply(current_user)
-        recipient_id = parent_post.user_id
-        return if current_user.id == recipient_id # 自分宛の返信は通知しない
-
-        notification = current_user.sent_notifications.new(
-          recipient_id: parent_post.user_id, # 返信の親投稿のユーザーIDを通知の受信者とする
-          sender_id: current_user.id, # 通知の送信者
-          notifiable: self, # 返信
-          action: 'reply', # アクションタイプ
-          unread: true # 未読状態
-        )
-        notification.save if notification.valid?
-
-        # メール通知
-        recipient = User.find(recipient_id)
-        return unless recipient.email_notify_on_reply
-
-        UserMailer.reply_notification(recipient, self).deliver_later
-      end
-
-      # 投稿の通知を作成するメソッド
       def create_notification_post(current_user)
+        # 通知の作成
         notifications = direct_recipients.where.not(id: current_user.id).map do |recipient|
           current_user.sent_notifications.new(
             recipient_id: recipient.id,
@@ -60,12 +40,28 @@ module Posts
             unread: true
           )
         end
-
-        # バルクインサート
-        Notification.import(notifications)
-
+    
+        notifications.each(&:save)
+    
         # メール通知をバッチ処理で実行
         direct_recipients.where.not(id: current_user.id).each do |recipient|
+          UserMailer.direct_notification(recipient, self).deliver_later if recipient.email_notify_on_direct_message
+        end
+      end
+
+      # 投稿の通知を作成するメソッド
+      def create_notification_post(current_user)
+        direct_recipients.where.not(id: current_user.id).each do |recipient|
+          notification = current_user.sent_notifications.new(
+            recipient_id: recipient.id,
+            sender_id: current_user.id,
+            notifiable: self,
+            action: 'direct',
+            unread: true
+          )
+          notification.save!
+    
+          # メール通知をバッチ処理で実行
           UserMailer.direct_notification(recipient, self).deliver_later if recipient.email_notify_on_direct_message
         end
       end

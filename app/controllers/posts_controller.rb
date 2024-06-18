@@ -1,3 +1,4 @@
+# app/controllers/posts_controller.rb
 class PostsController < ApplicationController
   include ActionView::RecordIdentifier
 
@@ -28,13 +29,15 @@ class PostsController < ApplicationController
   def edit; end
 
   def create
-    @post = current_user.posts.build(post_params.except(:recipient_ids))
+    @post = current_user.posts.build(post_params.except(:recipient_ids, :audio))
+    
     if @post.save
-      create_post_users(@post) if post_params[:recipient_ids].present?
-      notify_async(@post, 'direct') if @post.privacy == 'selected_users'
-
+      if post_params[:audio].present?
+        UploadAudioJob.perform_later(@post.id, post_params[:audio])
+      end
+      PostCreationJob.perform_later(@post.id, post_params[:recipient_ids]) # 投稿保存後の関連処理を非同期で実行
       flash[:notice] = t('defaults.flash_message.created', item: Post.model_name.human, default: '投稿が作成されました。')
-      redirect_to user_post_path(current_user.username_slug, @post)
+      render turbo_stream: turbo_stream.replace('flash', partial: 'shared/flash_message', locals: { flash: })
     else
       flash.now[:danger] = t('defaults.flash_message.not_created', item: Post.model_name.human, default: '投稿の作成に失敗しました。')
       render :new, status: :unprocessable_entity
@@ -42,8 +45,11 @@ class PostsController < ApplicationController
   end
 
   def update
-    if @post.update(post_params.except(:recipient_ids))
-      create_post_users(@post) if post_params[:recipient_ids].present?
+    if @post.update(post_params.except(:recipient_ids, :audio))
+      if post_params[:audio].present?
+        UploadAudioJob.perform_later(@post.id, post_params[:audio])
+      end
+      PostUsersCreationJob.perform_later(@post.id, post_params[:recipient_ids]) if post_params[:recipient_ids].present?
       flash[:notice] = t('defaults.flash_message.updated', item: Post.model_name.human, default: '投稿が更新されました。')
       redirect_to user_post_path(current_user.username_slug, @post)
     else
@@ -87,18 +93,6 @@ class PostsController < ApplicationController
     params.require(:post).permit(:user_id, :body, :audio, :duration, :privacy, :post_reply_id, recipient_ids: [])
   end
 
-  # 投稿に関連するユーザーを作成する
-  def create_post_users(post)
-    params[:post][:recipient_ids].each do |recipient_id|
-      post.post_users.create(user_id: recipient_id, role: 'direct_recipient')
-    end
-  end
-
-  # 非同期通知を実行する
-  def notify_async(post, notification_type)
-    NotificationJob.perform_later(notification_type, post.id)
-  end
-
   # フォローしているユーザーを投稿数でソートする
   def set_followings_by_post_count
     @sorted_followings = current_user.following_ordered_by_sent_posts
@@ -116,6 +110,7 @@ class PostsController < ApplicationController
         .order(Arel.sql('reposted_at DESC'))
   end
 
+  # 投稿の表示権限を確認
   def authorize_view!
     return if @post.visible_to?(current_user)
 
