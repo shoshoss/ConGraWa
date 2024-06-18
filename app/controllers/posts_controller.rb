@@ -37,7 +37,11 @@ class PostsController < ApplicationController
       end
       PostCreationJob.perform_later(@post.id, post_params[:recipient_ids]) # 投稿保存後の関連処理を非同期で実行
       flash[:notice] = t('defaults.flash_message.created', item: Post.model_name.human, default: '投稿が作成されました。')
-      render turbo_stream: turbo_stream.replace('flash', partial: 'shared/flash_message', locals: { flash: })
+      render turbo_stream: [
+        turbo_stream.remove('post_modal'),
+        turbo_stream.prepend('post-list', partial: 'posts/post', locals: { post: @post }),
+        turbo_stream.replace('flash', partial: 'shared/flash_message', locals: { flash: })
+      ]
     else
       flash.now[:danger] = t('defaults.flash_message.not_created', item: Post.model_name.human, default: '投稿の作成に失敗しました。')
       render :new, status: :unprocessable_entity

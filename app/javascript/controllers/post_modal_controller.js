@@ -39,8 +39,6 @@ export default class extends Controller {
       // フォームのバリデーションエラーの場合はここで何もしない
       return;
     }
-
-    Turbo.visit(window.location.href, { action: "replace" });
   }
 
   // 録音開始

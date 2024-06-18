@@ -21,7 +21,7 @@
           </button>
         </div>
 
-        <%= form_with model: @post, data: { controller: "post-modal", action: "turbo:submit-end->post-modal#afterClose" } do |f| %>
+        <%= form_with model: @post do |f| %>
           <div class="card-body p-2">
             <%= render 'shared/error_messages', object: f.object %>
             <div class="form-control pt-2">

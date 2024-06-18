@@ -98,9 +98,9 @@
 
       <!-- 投稿ボタン -->
       <%= link_to t('header.post_audio'),
-                  new_post_path(privacy: 'open'),
-                  class: "text-white font-bold btn btn-info btn-sm rounded-full transition-colors duration-300",
-                  data: { turbo_frame: "post_modal" } %>
+            new_post_path(privacy: 'open'),
+            class: "text-white font-bold btn btn-info btn-sm rounded-full transition-colors duration-300",
+            data: { turbo_frame: "post_modal", turbo_action: "advance" } %>
 
       <!-- ユーザーメニュー -->
       <div class="z-50 dropdown dropdown-hover dropdown-end shrink-0">
